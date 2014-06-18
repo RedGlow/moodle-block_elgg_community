@@ -50,7 +50,7 @@ class ElggApiClient {
     public static function create_instance ($CFG, $USER) {
         // Set API credentials
         $api_params = array(
-            'elgg_url' => $CFG->block_elgg_community_elgg_url,
+            'elgg_url' => $CFG->block_elgg_community_elgg_url . "services/api/rest/json/",
             'keys' => array(
                 'public' => $CFG->block_elgg_community_public,
                 'private' => $CFG->block_elgg_community_secret,
@@ -74,7 +74,7 @@ class ElggApiClient {
 	if ($success) {
 	    return $elgg;
 	} else {
-	    return null;
+	    throw new Exception($elgg->getError());
 	}
     }
 

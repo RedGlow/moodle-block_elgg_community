@@ -48,20 +48,11 @@ class block_elgg_community extends block_list {
             return $this->content;
         }
 
-        // Set API credentials
-        $api_params = array(
-            'elgg_url' => $CFG->block_elgg_community_elgg_url,
-            'keys' => array(
-                'public' => $CFG->block_elgg_community_public,
-                'private' => $CFG->block_elgg_community_secret,
-            ),
-        );
-
-	// Create the API object
-	$elgg = ElggApiClient::create_instance($CFG, $USER);
-
-        if ($elgg === null) {
-            $this->content->footer = $elgg->getError();
+	    // Create the API object
+        try {
+            $elgg = ElggApiClient::create_instance($CFG, $USER);
+        } catch(Exception $e) {
+            $this->content->footer = $e->getMessage();
             return $this->content;
         }
 
