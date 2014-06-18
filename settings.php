@@ -25,3 +25,10 @@ $settings->add(new admin_setting_configtext(
     get_string('config_secret_key', 'block_elgg_community'),
     ''
 ));
+
+$settings->add(new admin_setting_configtext(
+    'block_elgg_community_name',
+    get_string('community_name', 'block_elgg_community'),
+    get_String('config_community_name', 'block_elgg_community'),
+    ''
+));

@@ -57,19 +57,10 @@ class block_elgg_community extends block_list {
             ),
         );
 
-        // Initialize the API
-        $elgg = new ElggApiClient($api_params);
+	// Create the API object
+	$elgg = ElggApiClient::create_instance($CFG, $USER);
 
-        $params = array(
-            'username' => $USER->username,
-            'name' => "$USER->firstname $USER->lastname",
-            'email' => $USER->email
-        );
-    
-        // Test connection to Elgg
-        $success = $elgg->init($params);
-
-        if (!$success) {
+        if ($elgg === null) {
             $this->content->footer = $elgg->getError();
             return $this->content;
         }
@@ -80,11 +71,19 @@ class block_elgg_community extends block_list {
         if ($this->config->use_groups) {
             $group_guid = $elgg->getGroupGUID($COURSE->shortname);
 
-            $group_url = "{$url}groups/profile/{$group_guid}/{$COURSE->shortname}/";
+            $group_url = "{$url}groups/profile/{$group_guid}/{$COURSE->shortname}-{$CFG->block_elgg_community_name}/";
         }
 
+	// Create callback moodle url
+	$callback_url = $CFG->wwwroot . "/blocks/elgg_community/callback.php";
+
+	// Get login url
+	$login_url = $elgg->getLoginURL();
+	$login_url .= "?callback_url=" . urlencode($callback_url) . "&group_url=" . urlencode($group_url) . "&username=" . $USER->username;
+
+	// Produce login link
         $elgg_link = get_string('go_to_community', 'block_elgg_community');
-        $this->content->footer = "<a href=\"$group_url\">$elgg_link</a>";
+        $this->content->footer = "<a href=\"$login_url\">$elgg_link</a>";
 
         // Start the main content of the block
         // Get the recent posts

@@ -41,18 +41,97 @@ class ElggApiClient {
     }
 
     /**
+     * Create a new ElggApiClient object and initializes it starting from
+     * the current configuration and user.
+     *
+     * @param $CFG The global configuration object.
+     * @param $USER The global user object.
+     */
+    public static function create_instance ($CFG, $USER) {
+        // Set API credentials
+        $api_params = array(
+            'elgg_url' => $CFG->block_elgg_community_elgg_url,
+            'keys' => array(
+                'public' => $CFG->block_elgg_community_public,
+                'private' => $CFG->block_elgg_community_secret,
+            ),
+        );
+
+        // Initialize the API
+        $elgg = new ElggApiClient($api_params);
+
+        $params = array(
+            'username' => $USER->username,
+            'name' => "$USER->firstname $USER->lastname",
+            'email' => $USER->email,
+	    'community' => $CFG->block_elgg_community_name
+        );
+    
+        // Test connection to Elgg
+        $success = $elgg->init($params);
+
+	// Return accordingly
+	if ($success) {
+	    return $elgg;
+	} else {
+	    return null;
+	}
+    }
+
+    /**
      * Get group GUID.
      *
      * @param string $shortname The shortname of the course
      * @return int
      */
     public function getGroupGUID($shortname) {
+        global $CFG;
         if (isset($this->groupGuid)) {
             return $this->groupGuid;
         } else {
-            $this->groupGuid = $this->post('elgg.get_groupGUID', array('shortname' => $shortname));
+            $this->groupGuid = $this->post('elgg.get_groupGUID', array(
+	        'shortname' => $shortname,
+		'community' => $CFG->block_elgg_community_name
+	    ));
             return $this->groupGuid;
         }
+    }
+
+    /**
+     * Get the login url of elgg.
+     *
+     * @return The login url to enter in Elgg.
+     */
+    public function getLoginURL() {
+        if (isset($this->loginUrl)) {
+            return $this->loginUrl;
+        } else {
+            $this->loginUrl = $this->post('elgg.get_login_url');
+            return $this->loginUrl;
+        }
+    }
+
+    /**
+     * Get the URL where a token login can be performed.
+     *
+     * @return the login URL for token login.
+     */
+    public function getTokenLoginUrl() {
+        if (isset($this->tokenLoginUrl)) {
+            return $this->tokenLoginUrl;
+        } else {
+            $this->tokenLoginUrl = $this->post('elgg.get_token_login_url');
+            return $this->tokenLoginUrl;
+        }
+    }
+
+    /**
+     * Produce a login token from elgg, valid only for a few seconds.
+     *
+     * @return The login token.
+     */
+    function produceLoginToken() {
+        return $this->post('elgg.produce_login_token');
     }
 
     /**

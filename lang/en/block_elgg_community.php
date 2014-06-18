@@ -15,6 +15,7 @@ $string['config_elgg_url'] = 'Elgg url with a trailing slash as it is displayed 
 $string['config_secret_key'] = 'Shared secret key between Moodle and Elgg.';
 $string['config_public_key'] = 'Shared public key between Moodle and Elgg.';
 $string['config_use_groups'] = 'Link to a group in Elgg community';
+$string['config_community_name'] = 'Unique name to distinguish multiple moodle instances on the same Elgg installation.';
 
 $string['pluginname'] = 'Elgg Community';
 $string['elgg_community'] = 'Elgg Community';
@@ -28,3 +29,4 @@ $string['no_blog_posts_found'] = 'No blog posts found!';
 $string['no_files_found'] = 'No files found!';
 $string['secret_key'] = 'Secret key';
 $string['public_key'] = 'Public key';
+$string['community_name'] = 'Community name';
