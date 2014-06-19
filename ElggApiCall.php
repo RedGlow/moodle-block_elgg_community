@@ -19,11 +19,13 @@ class ElggApiCall {
      * @param string $content_type The content type
      */
     public function sendApiCall(array $keys, $url, array $call, $method = 'GET', $post_data = '', $content_type = 'application/octet-stream') {
+        global $CFG;
+
         $headers = array();
         $encoded_params = array();
 
         $method = strtoupper($method);
-        switch (strtoupper($method)) {
+        switch ($method) {
             case 'GET' :
             case 'POST' :
                 break;
@@ -76,30 +78,49 @@ class ElggApiCall {
             $headers['Content-Length'] = strlen($post_data);
         }
 
-        // Opt array
-        $http_opts = array(
-            'method' => $method,
-            'header' => $this->serialise_api_headers($headers)
-        );
+        // Create a curl session
+        $csession = curl_init();
 
-        if ($method == 'POST') {
-            $http_opts['content'] = $post_data;
-        }
+        // Remap the headers array
+        $headers_compressed = array();
+        foreach($headers as $key => $value)
+            $headers_compressed[] = $key . ": " . $value;
 
-        $opts = array('http' => $http_opts);
+        // Set URL and options (method, headers, post body)
+        curl_setopt_array($csession, array(
+            CURLOPT_URL => $url,
+            CURLOPT_POST => $method == "POST",
+            CURLOPT_HTTPHEADER => $headers_compressed,
+            CURLOPT_POSTFIELDS => $post_data,
+	    CURLOPT_FAILONERROR => FALSE,
+	    CURLOPT_HTTP200ALIASES => array(400, 500),
 
-        // Send context
-        $context = stream_context_create($opts);
+            CURLOPT_RETURNTRANSFER => TRUE,
 
-        // Send the query and get the result. Suppress possible warning.
-        $results = @file_get_contents($url, false, $context);
+            CURLOPT_HEADER => FALSE,
+            CURLOPT_USERAGENT => "Moodle " . $CFG->release . " + elgg_moodle_integration",
+        ));
 
-        if (!$results) {
-            $message = get_string("bad_url", 'block_elgg_community');
+        // Run the HTTP request
+        $result = curl_exec($csession);
+
+        // Check CURL internal errors
+        if($result === FALSE) {
+            $message = get_string("bad_url", 'block_elgg_community') . " - " . curl_error($csession);
+            curl_close($csession);
             throw new Exception($message);
         }
 
-        return $results;
+        // Check Elgg error
+        $http_code = curl_getinfo($csession, CURLINFO_HTTP_CODE);
+        if($http_code > 400) {
+            $message = get_string("bad_url", 'block_elgg_community') . " - " . $result;
+            curl_close($csession);
+            throw new Exception($message);
+        }
+
+        curl_close($csession);
+        return $result;
     }
 
     /**
